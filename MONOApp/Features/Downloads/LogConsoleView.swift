@@ -28,11 +28,7 @@ struct LogConsoleView: View {
                                 }
                                 ForEach(model.log.entries) { entry in
                                     row(entry)
-                                        .visualEffect { content, geometry in
-                                            let top = geometry.frame(in: .named("logViewport")).minY
-                                            let fade = effectsEnabled ? min(1, max(0, (84 - top) / 84)) : 0
-                                            content.blur(radius: fade * 5).opacity(1 - Double(fade) * 0.65)
-                                        }
+                                        .modifier(LogTopDissolve(enabled: effectsEnabled))
                                         .id(entry.id)
                                 }
                             }
@@ -115,6 +111,22 @@ struct LogConsoleView: View {
         case .resolving, .resolved: .link
         case .started, .progress, .queued: .download
         default: .info
+        }
+    }
+}
+
+private struct LogTopDissolve: ViewModifier {
+    let enabled: Bool
+    func body(content: Content) -> some View {
+        let enabled = enabled
+        return content.visualEffect { effect, geometry in
+            let top: CGFloat = geometry.frame(in: .named("logViewport")).minY
+            let raw: CGFloat = (84.0 - top) / 84.0
+            let amount: CGFloat = enabled ? Swift.min(CGFloat(1), Swift.max(CGFloat(0), raw)) : 0
+            let radius: CGFloat = amount * 5.0
+            let alpha: Double = 1.0 - Double(amount) * 0.65
+            let blurred = effect.blur(radius: radius, opaque: false)
+            return blurred.opacity(alpha)
         }
     }
 }
