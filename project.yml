@@ -56,6 +56,8 @@ targets:
       path: Config/Share-Info.plist
       properties:
         CFBundleDisplayName: $(APP_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         MonoAppGroup: $(APP_GROUP)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services

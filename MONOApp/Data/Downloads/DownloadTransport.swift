@@ -74,7 +74,8 @@ final class DownloadTransport: NSObject, URLSessionDownloadDelegate, @unchecked 
     func pause(_ id: UUID) async -> Bool {
         for task in await tasks() where task.taskDescription == id.uuidString {
             if let download = task as? URLSessionDownloadTask {
-                download.cancel { [emit] data in emit(.paused(id, data)) }
+                let data = await download.cancelByProducingResumeData()
+                emit(.paused(id, data))
                 return true
             }
         }

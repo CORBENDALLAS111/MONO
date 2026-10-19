@@ -3,6 +3,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      live_network:
+        description: Also run the separate real HTTPS NASA media download smoke test
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -31,6 +36,8 @@ jobs:
           swift build -c release --product xcodegen
           echo "$RUNNER_TEMP/XcodeGen/.build/release" >> "$GITHUB_PATH"
       - name: Build both targets, archive and test
+        env:
+          RUN_LIVE_NETWORK: ${{ inputs.live_network && '1' || '0' }}
         run: bash scripts/ci.sh
       - name: Upload real unsigned device output
         if: success()
@@ -42,6 +49,12 @@ jobs:
             build/MONO-UNSIGNED-REQUIRES-SIGNING.ipa
           if-no-files-found: error
           retention-days: 14
+      - name: Export actual simulator test attachments
+        if: always()
+        run: |
+          if [ -d build/MONO-tests.xcresult ]; then
+            xcrun xcresulttool export attachments --path build/MONO-tests.xcresult --output-path build/screenshots > build/screenshot-export.log 2>&1 || echo '::warning::Optional screenshot export failed; inspect xcresult.'
+          fi
       - name: Upload logs and test results
         if: always()
         uses: actions/upload-artifact@v4

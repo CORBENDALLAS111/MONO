@@ -48,8 +48,8 @@ Vendor/Lucide/                # pinned official SVG and license
 
 ## Сборка через GitHub — Mac у владельца не требуется
 
-1. Push этого отдельного репозитория в GitHub. В Actions включить workflows.
-2. Открыть **iOS CI → Run workflow** либо отправить коммит. Runner `macos-26`: скрипт обнаруживает установленные stable Xcode 26.x, выбирает 26.6, если он есть, и сохраняет реальную версию. Никакого Xcode для Windows не предполагается.
+1. Репозиторий: https://github.com/CORBENDALLAS111/MONO (private). Workflows доступны во вкладке Actions.
+2. Открыть **iOS CI → Run workflow** либо отправить коммит. Опция `live_network` дополнительно запускает отдельный настоящий HTTPS transfer test с NASA Blue Marble; обычный набор использует детерминированные fixtures. Runner `macos-26`: скрипт обнаруживает установленные stable Xcode 26.x, выбирает 26.6, если он есть, и сохраняет реальную версию. Никакого Xcode для Windows не предполагается.
 3. XcodeGen 2.44.1 собирается из фиксированного git tag. Assets/иконки/локализации уже включены, генерация не требует сетевых пакетов.
 4. CI собирает app + extension для устройства, делает unsigned archive, запускает unit/UI tests на доступном iPhone с iOS 26. При отсутствии runtime выполняет build-for-testing и явно сообщает **SKIPPED**, а не PASS.
 5. В завершённом run → Artifacts: `MONO-UNSIGNED-device` (реальный `.xcarchive.tar.gz` и `MONO-UNSIGNED-REQUIRES-SIGNING.ipa`), `MONO-build-logs` (логи и `.xcresult`). Наличие и корректность результатов подтверждаются только успешным run.

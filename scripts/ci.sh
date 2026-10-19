@@ -22,16 +22,30 @@ for runtime, entries in devices.items():
     for item in entries:
         if item.get('isAvailable') and item['name'].startswith('iPhone'):
             options.append((runtime,item['name'],item['udid']))
-print(sorted(options)[-1][2] if options else '')
+selected=sorted(options)[-1] if options else None
+if selected:
+    open('build/simulator-selection.txt','w').write('Runtime: '+selected[0]+'\nDevice: '+selected[1]+'\nUDID: '+selected[2]+'\n')
+print(selected[2] if selected else '')
 PY
 simulator="$(cat build/simulator-id)"
 if [ -n "$simulator" ]; then
   xcodebuild -project MONO.xcodeproj -scheme MONO -configuration Debug \
     -destination "platform=iOS Simulator,id=$simulator" -parallel-testing-enabled NO \
     -test-timeouts-enabled YES -default-test-execution-time-allowance 90 -maximum-test-execution-time-allowance 180 \
+    -skip-testing:MONOUITests/FlowTests/testLiveAuthorizedDirectImageDownload \
     -resultBundlePath build/MONO-tests.xcresult CODE_SIGNING_ALLOWED=NO test | tee build/tests.log
   echo 'Simulator unit/UI tests: executed; see xcresult for counts.' >> "$GITHUB_STEP_SUMMARY"
-  xcrun xcresulttool export attachments --path build/MONO-tests.xcresult --output-path build/screenshots > build/screenshot-export.log 2>&1 || echo '::warning::Could not export optional UI screenshots; inspect xcresult attachments.'
+  cat build/simulator-selection.txt >> "$GITHUB_STEP_SUMMARY"
+  if [ "${RUN_LIVE_NETWORK:-0}" = 1 ]; then
+    xcodebuild -project MONO.xcodeproj -scheme MONO -configuration Debug \
+      -destination "platform=iOS Simulator,id=$simulator" -parallel-testing-enabled NO \
+      -only-testing:MONOUITests/FlowTests/testLiveAuthorizedDirectImageDownload \
+      -test-timeouts-enabled YES -default-test-execution-time-allowance 150 -maximum-test-execution-time-allowance 180 \
+      -resultBundlePath build/MONO-live-tests.xcresult CODE_SIGNING_ALLOWED=NO test | tee build/live-tests.log
+    echo 'Separate live HTTPS NASA image transfer test: executed, see MONO-live-tests.xcresult.' >> "$GITHUB_STEP_SUMMARY"
+  else
+    echo 'Live external-network test: not requested (separate from deterministic fixture suite).' >> "$GITHUB_STEP_SUMMARY"
+  fi
 else
   xcodebuild -project MONO.xcodeproj -scheme MONO -configuration Debug \
     -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build-for-testing | tee build/simulator-build.log

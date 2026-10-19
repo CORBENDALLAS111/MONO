@@ -28,7 +28,7 @@ final class AppModel {
         do {
             let disk: DiskStore
             #if DEBUG
-            if FixtureNetwork.active { disk = try DiskStore(root: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)) }
+            if FixtureNetwork.isolatedStorage { disk = try DiskStore(root: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)) }
             else { disk = try DiskStore() }
             #else
             disk = try DiskStore()
@@ -82,7 +82,7 @@ final class AppModel {
     }
     func drainInbox() {
         #if DEBUG
-        if FixtureNetwork.active { return }
+        if FixtureNetwork.isolatedStorage { return }
         #endif
         do {
             for (path, request) in try ShareInbox.read() {

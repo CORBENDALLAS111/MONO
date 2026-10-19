@@ -3,34 +3,26 @@ import UIKit
 
 @MainActor
 final class AppDelegate: NSObject, UIApplicationDelegate {
-    var model: AppModel?
-    private var pendingCompletion: (() -> Void)?
-    func attach(_ model: AppModel) {
-        self.model = model
-        if let pendingCompletion {
-            model.backgroundCompletion = pendingCompletion
-            self.pendingCompletion = nil
-            model.finishBackgroundIfReady()
-        }
-    }
+    // Initialize background-session ownership before UIKit delivers background events,
+    // even when no foreground SwiftUI task has run yet.
+    let model = AppModel()
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
                      completionHandler: @escaping () -> Void) {
-        if let model { model.backgroundCompletion = completionHandler; model.finishBackgroundIfReady() }
-        else { pendingCompletion = completionHandler }
+        model.backgroundCompletion = completionHandler
+        model.finishBackgroundIfReady()
     }
 }
 
 @main
 struct MONOApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-    @State private var model = AppModel()
     @AppStorage("appearance") private var appearance = Appearance.obsidian.rawValue
     var body: some Scene {
         WindowGroup {
-            AppShell().environment(model)
+            AppShell().environment(delegate.model)
                 .preferredColorScheme(Appearance(rawValue: appearance)?.scheme)
                 .tint(Color.primary)
-                .task { delegate.attach(model); await model.recover() }
+                .task { await delegate.model.recover() }
         }
     }
 }

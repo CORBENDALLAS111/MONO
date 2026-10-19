@@ -2,7 +2,7 @@
 
 Swift 6, iPhone iOS 26+, SwiftUI and Foundation. One application target plus a separately sandboxed NSExtension, built using the committed XcodeGen specification. No runtime third-party dependencies. Native UIKit is limited to lifecycle handoff, extension hosting, native tab image rendering and document export.
 
-`AppModel` is MainActor-isolated observable state. Views own input/filter/sheet state, inject the app model via environment and delegate transfers to DownloadTransport. Models are Sendable Codable value types. ResolverRegistry selects GenericDirectMediaResolver or an explicitly configured authorized service implementing MediaResolver.
+`AppModel` is MainActor-isolated observable state, created by AppDelegate before background callbacks arrive. Views own input/filter/sheet state, inject the app model via environment and delegate transfers to DownloadTransport. Models are Sendable Codable value types. ResolverRegistry selects GenericDirectMediaResolver or an explicitly configured authorized service implementing MediaResolver. Delegate events enter MainActor through one sequential AsyncStream consumer; processing IDs prevent concurrent verification of the same staged file.
 
 SafeHTTP validates HTTPS/DNS and redirect destinations; bearer requests refuse redirects. No web scraping occurs on the phone. The optional backend reads an operator-curated authorized catalog and never acts as a media proxy. See SECURITY for DNS rebinding limitations of platform networking.
 

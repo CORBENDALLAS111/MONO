@@ -42,7 +42,10 @@ def api(path, payload=None):
             location=error.headers['Location']; parsed=urllib.parse.urlsplit(location)
             if parsed.scheme != 'https' or parsed.username or parsed.password: raise SystemExit('Unsafe artifact redirect')
             # New request intentionally has NO GitHub Authorization header.
-            with urllib.request.urlopen(location,timeout=60) as response: return response.read()
+            try:
+                with urllib.request.urlopen(location,timeout=60) as response: return response.read()
+            except urllib.error.HTTPError as temporary:
+                print('GitHub log/artifact storage HTTP status:',temporary.code); raise SystemExit(1)
         print('GitHub HTTP status:',error.code); raise SystemExit(1)
 
 command=sys.argv[1]
@@ -55,6 +58,10 @@ elif command == 'jobs':
 elif command == 'artifacts':
     data=api('/actions/runs/'+str(int(sys.argv[2]))+'/artifacts')
     print(json.dumps([{'id':a['id'],'name':a['name'],'bytes':a['size_in_bytes'],'expired':a['expired']} for a in data['artifacts']],indent=2))
+elif command == 'job-log':
+    data=api('/actions/jobs/'+str(int(sys.argv[2]))+'/logs')
+    text=data.decode(errors='replace') if isinstance(data,bytes) else str(data)
+    print('\n'.join(text.splitlines()[-70:]))
 elif command == 'logs':
     data=api('/actions/runs/'+str(int(sys.argv[2]))+'/logs')
     directory=root/'build'/'logs'/str(int(sys.argv[2])); directory.mkdir(parents=True,exist_ok=True)
@@ -66,7 +73,22 @@ elif command == 'logs':
         destination.write_text(text,encoding='utf-8')
         errors=[line for line in text.splitlines() if any(p in line for p in ('error:','##[error]','TEST FAILED','Executed ','Xcode 26','FAILED'))]
         if errors: print(destination.name+'\n'+'\n'.join(errors[:45]))
+elif command == 'download-artifact':
+    identifier=str(int(sys.argv[2]))
+    data=api('/actions/artifacts/'+identifier+'/zip')
+    directory=root/'build'/'artifacts'/identifier
+    directory.mkdir(parents=True,exist_ok=True)
+    (directory/'artifact.zip').write_bytes(data)
+    archive=zipfile.ZipFile(io.BytesIO(data))
+    # Extract only preview PNGs and their manifest for local inspection, using flat safe names.
+    previews=[]
+    for item in archive.infolist():
+        name=pathlib.Path(item.filename).name
+        if name.lower().endswith('.png') or (name == 'manifest.json' and 'screenshots' in item.filename):
+            (directory/name).write_bytes(archive.read(item))
+            previews.append(name)
+    print(json.dumps({'file':str(directory/'artifact.zip'),'previews':previews},indent=2))
 elif command == 'dispatch':
-    api('/actions/workflows/ios-ci.yml/dispatches',{'ref':'main'})
+    api('/actions/workflows/ios-ci.yml/dispatches',{'ref':'main','inputs':{'live_network':'true' if '--live' in sys.argv else 'false'}})
     print('Workflow dispatch accepted')
 else: raise SystemExit('Unknown command')
