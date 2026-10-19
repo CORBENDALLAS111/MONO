@@ -15,11 +15,7 @@ final class ShareViewController: UIViewController {
             var accepted: [URL] = []
             for item in items {
                 for provider in (item.attachments ?? []).prefix(10) {
-                    let type: String
-                    if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) { type = UTType.url.identifier }
-                    else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) { type = UTType.plainText.identifier }
-                    else { continue }
-                    let loadedText = try await load(provider, type: type)
+                    let loadedText = try await ProviderText.load(provider)
                     if let loadedText { accepted.append(try URLPolicy.extract(loadedText)) }
                 }
             }
@@ -28,16 +24,6 @@ final class ShareViewController: UIViewController {
             show(String(localized: "share.pending"), done: true)
         } catch {
             show(String(localized: "share.failure"), done: true)
-        }
-    }
-    private func load(_ provider: NSItemProvider, type: String) async throws -> String? {
-        try await withCheckedThrowingContinuation { continuation in
-            provider.loadItem(forTypeIdentifier: type, options: nil) { item, error in
-                if let error { continuation.resume(throwing: error) }
-                else if let url = item as? URL { continuation.resume(returning: url.absoluteString) }
-                else if let string = item as? String { continuation.resume(returning: string) }
-                else { continuation.resume(returning: nil) }
-            }
         }
     }
     private func show(_ message: String, done: Bool) {

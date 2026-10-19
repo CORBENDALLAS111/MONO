@@ -48,12 +48,9 @@ final class PasteTargetView: UIView {
     required init?(coder: NSCoder) { return nil }
     override func paste(itemProviders: [NSItemProvider]) {
         guard let provider = itemProviders.first else { receive(nil); return }
-        let type = provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) ? UTType.url.identifier : UTType.plainText.identifier
-        provider.loadItem(forTypeIdentifier: type, options: nil) { [weak self] item, _ in
-            let value: String?
-            if let url = item as? URL { value = url.absoluteString }
-            else { value = item as? String }
-            Task { @MainActor [weak self] in self?.receive(value) }
+        Task { [weak self] in
+            do { self?.receive(try await ProviderText.load(provider)) }
+            catch { self?.receive(nil) }
         }
     }
 }

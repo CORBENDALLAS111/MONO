@@ -2,6 +2,16 @@ import XCTest
 @testable import MONO
 
 final class CoreTests: XCTestCase {
+    @MainActor func testProviderLoadsTextInsteadOfTemporaryFileURL() async throws {
+        let value = "https://fixtures.mono.example/media.png"
+        let loaded = try await ProviderText.load(NSItemProvider(object: value as NSString))
+        XCTAssertEqual(loaded, value)
+    }
+    @MainActor func testProviderLoadsURLObject() async throws {
+        let url = try XCTUnwrap(URL(string: "https://fixtures.mono.example/media.png"))
+        let loaded = try await ProviderText.load(NSItemProvider(object: url as NSURL))
+        XCTAssertEqual(loaded, url.absoluteString)
+    }
     func testActivityLogIsBounded() {
         var log = ActivityLog(capacity: 2)
         log.append(.ready); log.append(.resolving); log.append(.completed)
