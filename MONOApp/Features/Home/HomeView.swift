@@ -10,12 +10,6 @@ struct HomeView: View {
         @Bindable var model = model
         ScrollView {
             VStack(alignment: .leading, spacing: 30) {
-                HStack {
-                    Text((Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ?? "MONO")
-                        .font(.caption.weight(.bold)).tracking(5)
-                    Spacer()
-                    Text("home.original").font(.caption).foregroundStyle(.secondary)
-                }.padding(.top, 20)
                 VStack(alignment: .leading, spacing: 18) {
                     Text("home.hero").font(.system(.largeTitle, design: .default, weight: .semibold))
                         .tracking(-1.3).fixedSize(horizontal: false, vertical: true)
@@ -39,7 +33,11 @@ struct HomeView: View {
                         }
                     }
                 }.modifier(Surface())
-                Text("home.privacy").font(.footnote).foregroundStyle(.secondary).lineSpacing(3)
+                HStack(alignment: .top, spacing: 16) {
+                    Text("home.privacy").font(.footnote).foregroundStyle(.secondary).lineSpacing(3)
+                    IconButton(token: .list, label: "logs.title") { model.openLogs() }
+                        .modifier(GlassControl()).accessibilityIdentifier("logsButton")
+                }
                 if !model.library.isEmpty {
                     HStack {
                         Text("home.recent").font(.title3.weight(.semibold))
@@ -57,11 +55,6 @@ struct HomeView: View {
                             AppIcon(token: .check)
                         }.modifier(Surface())
                     }
-                } else {
-                    HStack(spacing: 12) {
-                        AppIcon(token: .download)
-                        Text("home.bytes").font(.footnote).foregroundStyle(.secondary)
-                    }.padding(.top, 12)
                 }
             }.padding(.horizontal, 24).padding(.bottom, 36)
         }
@@ -70,12 +63,12 @@ struct HomeView: View {
         .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.9), value: model.resolving)
     }
     private var paste: some View {
-        PasteButton(payloadType: String.self) { values in
-            if let value = values.first {
+        NativePasteControl { value in
+            if let value {
                 model.input = value
                 Task { await model.resolve() }
-            }
-        }.buttonStyle(.plain).labelStyle(.titleOnly)
+            } else { model.error = String(localized: "error.url") }
+        }
             .frame(maxWidth: .infinity, minHeight: 48).modifier(GlassControl())
             .accessibilityLabel("paste").accessibilityIdentifier("pasteButton")
     }

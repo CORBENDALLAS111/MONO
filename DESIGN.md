@@ -7,7 +7,7 @@ Application iconography comes from official Lucide SVGs at commit `1ef60af944de2
 | Semantic task | Actual upstream icon |
 |---|---|
 | Home | house |
-| Paste | clipboard-paste (system PasteButton retains system semantics) |
+| Paste | clipboard-paste (system UIPasteControl retains system semantics) |
 | URL | link |
 | Transfer | download |
 | Queue | list |

@@ -84,8 +84,7 @@ struct SettingsView: View {
                 Section("privacy") {
                     Text("privacy.detail").font(.footnote).foregroundStyle(.secondary)
                     Button("history.clear") {
-                        model.snapshot.jobs.removeAll { [.failed, .canceled].contains($0.state) }
-                        _ = model.persist()
+                        model.clearHistory()
                     }
                     Button("files.delete.all") { wipe = true }
                     Button("settings.reset") { reset = true }

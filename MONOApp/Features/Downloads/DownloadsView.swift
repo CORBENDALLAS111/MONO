@@ -56,6 +56,11 @@ struct DownloadsView: View {
             }.padding(24)
         }.background { MonoBackground() }
             .navigationTitle("tab.downloads")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    IconButton(token: .list, label: "logs.title") { model.openLogs() }.accessibilityIdentifier("logsButton")
+                }
+            }
             .refreshable { await model.recover() }
     }
 }

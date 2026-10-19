@@ -6,6 +6,8 @@ import UserNotifications
 final class AppModel {
     var snapshot = LibrarySnapshot()
     var manifest: MediaManifest?
+    var sheet: AppSheet?
+    var log = ActivityLog()
     var input = ""
     var resolving = false
     var error: String?
@@ -44,6 +46,7 @@ final class AppModel {
             eventTask = Task { [weak self] in
                 for await event in events { await self?.handle(event) }
             }
+            log.append(.ready)
         } catch {
             self.error = String(localized: "error.storage")
         }
@@ -52,11 +55,12 @@ final class AppModel {
         guard storageReady, let disk else { return false }
         snapshot.pendingInput = input.isEmpty ? nil : input
         do { try disk.save(snapshot); return true }
-        catch { self.error = String(localized: "error.storage"); return false }
+        catch { self.error = String(localized: "error.storage"); log.append(.storage); return false }
     }
     func resolve() async {
         guard !resolving else { return }
         resolving = true
+        log.append(.resolving)
         defer { resolving = false }
         do {
             let url = try URLPolicy.extract(input)
@@ -67,8 +71,13 @@ final class AppModel {
                 token = try KeychainToken.read()
             } else { token = "" }
             manifest = try await ResolverRegistry(endpoint: endpoint, token: token).resolve(url)
+            log.append(.resolved, detail: String(manifest?.assets.count ?? 0))
+            if case nil = sheet, let manifest { sheet = .inspector(manifest) }
         } catch is CancellationError { return }
-        catch { self.error = error is InputError ? error.localizedDescription : String(localized: "error.network") }
+        catch {
+            self.error = error is InputError ? error.localizedDescription : String(localized: "error.network")
+            log.append(.failed, detail: self.error)
+        }
     }
     func ingest(_ url: URL) {
         do {
@@ -125,6 +134,7 @@ final class AppModel {
             }
         }
         _ = persist()
+        log.append(.recovered, detail: String(tasks.count))
         await schedule()
     }
     func enqueue(_ manifest: MediaManifest, variants: [String: String], name: String, folder: String, preset: DownloadPreset) async {
@@ -135,9 +145,11 @@ final class AppModel {
             if snapshot.jobs.contains(where: { $0.variant.url == variant.url && $0.state != .canceled && $0.state != .failed }) { continue }
             snapshot.jobs.append(DownloadJob(sourceURL: manifest.sourceURL, variant: variant, kind: asset.kind,
                                              name: FileNames.safe(name), folder: FileNames.safe(folder), preset: preset))
+            log.append(.queued)
         }
         guard persist() else { return }
         self.manifest = nil
+        sheet = nil
         input = ""
         _ = persist()
         selectedTab = 1
@@ -163,6 +175,7 @@ final class AppModel {
                 let resumeData = FileManager.default.fileExists(atPath: path.path) ? try Data(contentsOf: path) : nil
                 transport.start(snapshot.jobs[current], resumeData: resumeData,
                                 cellular: !defaults.bool(forKey: "wifiOnly"), lowData: defaults.bool(forKey: "lowData"))
+                log.append(.started)
                 samples[id] = (Date(), snapshot.jobs[current].received)
             } catch {
                 if let current = index(id), snapshot.jobs[current].state == .running {
@@ -176,6 +189,7 @@ final class AppModel {
     func pause(_ id: UUID) async {
         guard let i = index(id), jobs[i].state == .running else { return }
         snapshot.jobs[i].state = .paused
+        log.append(.paused)
         snapshot.jobs[i].message = String(localized: "pause.preparing")
         _ = persist()
         let requested = await transport?.pause(id) ?? false
@@ -193,6 +207,7 @@ final class AppModel {
     func cancel(_ id: UUID) async {
         guard let i = index(id), jobs[i].state.allows(.canceled) else { return }
         snapshot.jobs[i].state = .canceled
+        log.append(.canceled)
         _ = persist()
         await transport?.cancel(id)
         await schedule()
@@ -210,6 +225,7 @@ final class AppModel {
             if elapsed >= 0.5 {
                 snapshot.jobs[i].speed = max(0, Double(received - previous.1) / elapsed)
                 samples[id] = (now, received)
+                log.append(.progress, detail: received.fileSize + (total > 0 ? " / " + total.fileSize : ""))
             }
         case .paused(let id, let data):
             guard let i = index(id), jobs[i].state == .paused else { return }
@@ -223,6 +239,7 @@ final class AppModel {
             guard let i = index(id), jobs[i].state == .running else { return }
             snapshot.jobs[i].state = .failed
             snapshot.jobs[i].message = message
+            log.append(.failed, detail: message)
             // A rejected/expired resume blob must not create an endless retry loop.
             if FileManager.default.fileExists(atPath: disk.resumeFile(id).path) {
                 do { try FileManager.default.removeItem(at: disk.resumeFile(id)) }
@@ -261,6 +278,7 @@ final class AppModel {
                 snapshot.jobs[i].received = size
                 snapshot.jobs[i].total = size
                 snapshot.jobs[i].state = .completed
+                log.append(.completed, detail: size.fileSize)
                 snapshot.jobs[i].message = nil
                 guard persist() else { return }
                 let resume = disk.resumeFile(id)
@@ -282,10 +300,15 @@ final class AppModel {
                     catch { self.error = String(localized: "error.permission") }
                 }
             } catch {
+                if FileManager.default.fileExists(atPath: staged.path) {
+                    do { try FileManager.default.removeItem(at: staged) }
+                    catch { self.error = String(localized: "error.storage") }
+                }
                 if let current = index(id) {
                     snapshot.jobs[current].state = .failed
                     snapshot.jobs[current].message = error is InputError ? error.localizedDescription : String(localized: "error.storage")
                 }
+                log.append(.failed, detail: error is InputError ? error.localizedDescription : String(localized: "error.storage"))
                 _ = persist()
             }
             await schedule()
@@ -310,7 +333,12 @@ final class AppModel {
     func delete(_ job: DownloadJob) {
         do {
             if let file = job.file, !jobs.contains(where: { $0.id != job.id && $0.file == file }), let disk {
-                try FileManager.default.removeItem(at: disk.file(file))
+                if FileManager.default.fileExists(atPath: disk.file(file).path) { try FileManager.default.removeItem(at: disk.file(file)) }
+            }
+            if let disk {
+                for path in [disk.resumeFile(job.id), disk.file(job.id.uuidString + ".staged")] where FileManager.default.fileExists(atPath: path.path) {
+                    try FileManager.default.removeItem(at: path)
+                }
             }
             snapshot.jobs.removeAll { $0.id == job.id }
             _ = persist()
@@ -320,5 +348,16 @@ final class AppModel {
         if let i = snapshot.presets.firstIndex(where: { $0.id == preset.id }) { snapshot.presets[i] = preset }
         else { snapshot.presets.append(preset) }
         _ = persist()
+    }
+    func clearHistory() {
+        for job in snapshot.jobs where job.state == .failed || job.state == .canceled { delete(job) }
+    }
+    func openLogs() { sheet = .logs }
+    func dismissSheet() {
+        if case .inspector = sheet { manifest = nil }
+        sheet = nil
+    }
+    func showPendingInspector() {
+        if case nil = sheet, let manifest { sheet = .inspector(manifest) }
     }
 }

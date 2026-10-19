@@ -1,8 +1,10 @@
 import XCTest
+import UIKit
 
 @MainActor
 final class FlowTests: XCTestCase {
-    /// Separate opt-in live test: uses production HTTPS/DNS/background URLSession, no URLProtocol.
+    /// Separate opt-in live test: actual HTTPS/DNS/URLSessionDownloadTask, no URLProtocol.
+    /// Uses a foreground session because unsigned hosted simulators reject nsurlsessiond XPC.
     /// NASA Blue Marble, educational verification; NASA source acknowledged, no endorsement.
     /// https://www.nasa.gov/nasa-brand-center/images-and-media/
     func testLiveAuthorizedDirectImageDownload() {
@@ -40,15 +42,14 @@ final class FlowTests: XCTestCase {
         }
     }
     func testAnalyzeSelectDownloadLibrary() {
+        UIPasteboard.general.string = "https://fixtures.mono.example/media.png"
         let app = XCUIApplication()
-        app.launchArguments = ["--mono-ui-fixtures", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchArguments = ["--mono-ui-fixtures", "-AppleLanguages", "(ru)", "-AppleLocale", "ru_RU"]
         app.launch()
-        let input = app.textFields["urlInput"].exists ? app.textFields["urlInput"] : app.textViews["urlInput"]
-        XCTAssertTrue(input.waitForExistence(timeout: 5))
-        input.tap()
-        input.typeText("https://fixtures.mono.example/media.png")
-        app.buttons["analyzeButton"].tap()
-        XCTAssertTrue(app.navigationBars["Before you save"].waitForExistence(timeout: 10), app.debugDescription)
+        let paste = app.buttons["pasteButton"].firstMatch
+        XCTAssertTrue(paste.waitForExistence(timeout: 5))
+        paste.tap()
+        XCTAssertTrue(app.navigationBars["Перед сохранением"].waitForExistence(timeout: 10), app.debugDescription)
         let download = app.buttons["downloadButton"]
         for _ in 0..<6 {
             if download.exists && download.isHittable { break }
@@ -56,8 +57,15 @@ final class FlowTests: XCTestCase {
         }
         guard download.exists && download.isHittable else { XCTFail(app.debugDescription); return }
         download.tap()
-        XCTAssertTrue(app.staticTexts["Saved"].firstMatch.waitForExistence(timeout: 15))
-        app.tabBars.buttons["Library"].tap()
+        XCTAssertTrue(app.staticTexts["Сохранено"].firstMatch.waitForExistence(timeout: 15))
+        app.buttons["logsButton"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Журнал"].waitForExistence(timeout: 5))
+        let logScreenshot = XCTAttachment(screenshot: app.screenshot())
+        logScreenshot.name = "MONO-logs-obsidian"
+        logScreenshot.lifetime = .keepAlways
+        add(logScreenshot)
+        app.buttons["closeLogs"].tap()
+        app.tabBars.buttons["Коллекция"].tap()
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "media")).firstMatch.waitForExistence(timeout: 5))
     }
     func testUnsupportedSocialShowsHonestError() {

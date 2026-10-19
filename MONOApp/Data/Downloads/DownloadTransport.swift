@@ -38,6 +38,10 @@ final class DownloadTransport: NSObject, URLSessionDownloadDelegate, @unchecked 
         if FixtureNetwork.active {
             config = .ephemeral
             config.protocolClasses = [FixtureNetwork.self]
+        } else if FixtureNetwork.liveSmoke {
+            // Unsigned hosted simulators cannot reliably connect to nsurlsessiond (XPC 4097).
+            // This test still exercises an actual HTTPS URLSessionDownloadTask, never URLProtocol.
+            config = .ephemeral
         } else { config = .background(withIdentifier: sessionIdentifier); config.sessionSendsLaunchEvents = true }
         #else
         config = .background(withIdentifier: sessionIdentifier)
@@ -102,7 +106,7 @@ final class DownloadTransport: NSObject, URLSessionDownloadDelegate, @unchecked 
             if FileManager.default.fileExists(atPath: destination.path) { try FileManager.default.removeItem(at: destination) }
             try FileManager.default.moveItem(at: location, to: destination)
             emit(.staged(id, destination))
-        } catch { emit(.failed(id, error.localizedDescription)) }
+        } catch { emit(.failed(id, error is InputError ? error.localizedDescription : String(localized: "error.storage"))) }
     }
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
         clearRedirects(task.taskIdentifier)

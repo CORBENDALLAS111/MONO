@@ -4,7 +4,8 @@ import Foundation
 /// Compiled out of Release archives. Enabled only by an explicit UI-test launch flag.
 final class FixtureNetwork: URLProtocol, @unchecked Sendable {
     static var active: Bool { ProcessInfo.processInfo.arguments.contains("--mono-ui-fixtures") }
-    static var isolatedStorage: Bool { active || ProcessInfo.processInfo.arguments.contains("--mono-live-smoke") }
+    static var liveSmoke: Bool { ProcessInfo.processInfo.arguments.contains("--mono-live-smoke") }
+    static var isolatedStorage: Bool { active || liveSmoke }
     static let fixtureHost = "fixtures.mono.example"
     static func accepts(_ url: URL) -> Bool { active && url.host == fixtureHost }
     static let png = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAFElEQVR4nGNsaGhgAAMmCMXAwAAAGzwBhC8efmgAAAAASUVORK5CYII=") ?? Data()

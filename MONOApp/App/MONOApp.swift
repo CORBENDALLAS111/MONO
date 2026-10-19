@@ -47,7 +47,12 @@ struct AppShell: View {
             if phase == .active { model.drainInbox() }
             if phase == .background { _ = model.persist() }
         }
-        .sheet(item: $model.manifest) { manifest in InspectorView(manifest: manifest) }
+        .sheet(item: Binding(get: { model.sheet }, set: { if $0 == nil { model.dismissSheet() } }), onDismiss: { model.showPendingInspector() }) { sheet in
+            switch sheet {
+            case .inspector(let manifest): InspectorView(manifest: manifest)
+            case .logs: LogConsoleView()
+            }
+        }
         .alert("error.title", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("ok") { model.error = nil }
         } message: { Text(model.error ?? "") }

@@ -131,3 +131,23 @@ error.export	Не удалось экспортировать файл.	Could no
 error.permission	Не удалось получить разрешение. Проверьте системные настройки.	Permission could not be granted. Check system settings.
 error.settings	Не удалось сохранить подключение. Проверьте HTTPS-адрес и доступность Keychain.	Could not save the connection. Check its HTTPS URL and Keychain availability.
 licenses	Лицензии открытого ПО	Open source licenses
+logs.title	Журнал	Activity log
+logs.live	СЕЙЧАС	LIVE
+logs.events	События	Events
+logs.latest	К последнему	Latest
+logs.privacy	Только эта сессия. Без ссылок, имён файлов и токенов.	This session only. No links, filenames or tokens.
+logs.export	Экспорт журнала	Export log
+logs.clear	Очистить журнал	Clear log
+log.ready	Приложение готово	App ready
+log.resolving	Проверяем ссылку	Analyzing link
+log.resolved	Медиа найдены · элементов	Media resolved · assets
+log.queued	Добавлено в очередь	Added to queue
+log.started	Передача началась	Transfer started
+log.progress	Получено данных	Bytes received
+log.paused	Загрузка приостановлена	Transfer paused
+log.canceled	Загрузка отменена	Transfer canceled
+log.completed	Файл проверен и сохранён	File verified and saved
+log.failed	Операция прервана	Operation interrupted
+log.recovered	Очередь восстановлена · активных задач	Queue recovered · active tasks
+log.storage	Не удалось сохранить состояние	Could not save state
+logs.empty	Здесь появятся новые события.	New events will appear here.

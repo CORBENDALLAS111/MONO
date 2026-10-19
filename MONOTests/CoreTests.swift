@@ -2,6 +2,23 @@ import XCTest
 @testable import MONO
 
 final class CoreTests: XCTestCase {
+    func testActivityLogIsBounded() {
+        var log = ActivityLog(capacity: 2)
+        log.append(.ready); log.append(.resolving); log.append(.completed)
+        XCTAssertEqual(log.entries.count, 2)
+        XCTAssertEqual(log.entries.first?.kind, .resolving)
+        log.clear()
+        XCTAssertTrue(log.entries.isEmpty)
+    }
+    func testActivityLogRedactsSecretsAndLinks() {
+        var log = ActivityLog()
+        log.append(.failed, detail: "https://example.com/private?token=secret Bearer abc123 token=private-value")
+        log.append(.failed, detail: "Authorization: Bearer another-secret")
+        XCTAssertFalse(log.exportText.contains("example.com"))
+        XCTAssertFalse(log.exportText.contains("abc123"))
+        XCTAssertFalse(log.exportText.contains("private-value"))
+        XCTAssertFalse(log.exportText.contains("another-secret"))
+    }
     func testNormalizeRemovesFragment() throws {
         XCTAssertEqual(try URLPolicy.normalize(" https://EXAMPLE.com/a.mp4#part ").absoluteString, "https://example.com/a.mp4")
     }
