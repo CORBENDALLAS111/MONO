@@ -1,0 +1,17 @@
+# Architecture
+
+Swift 6, iPhone iOS 26+, SwiftUI and Foundation. One application target plus a separately sandboxed NSExtension, built using the committed XcodeGen specification. No runtime third-party dependencies. Native UIKit is limited to lifecycle handoff, extension hosting, native tab image rendering and document export.
+
+`AppModel` is MainActor-isolated observable state. Views own input/filter/sheet state, inject the app model via environment and delegate transfers to DownloadTransport. Models are Sendable Codable value types. ResolverRegistry selects GenericDirectMediaResolver or an explicitly configured authorized service implementing MediaResolver.
+
+SafeHTTP validates HTTPS/DNS and redirect destinations; bearer requests refuse redirects. No web scraping occurs on the phone. The optional backend reads an operator-curated authorized catalog and never acts as a media proxy. See SECURITY for DNS rebinding limitations of platform networking.
+
+DownloadTransport owns URLSession's background identifier, uses a serial delegate queue, protects redirect counts with a lock and sends value events into MainActor. Its `@unchecked Sendable` covers immutable ownership and URLSession's thread-safe API, not unrestricted shared UI mutation. Queue metadata is atomically written before task creation. Background tasks identify jobs with taskDescription UUIDs. Relaunch enumerates tasks and verifies staged/final files; interrupted tasks report failure and can be retried. Pausing records resume data when URLSession supplies it; otherwise the UI explicitly reports a restart.
+
+File move from URLSession's temporary location to staging occurs synchronously inside its completion delegate. Hashing uses bounded chunks off the main thread. Verification/metadata reads use ImageIO/AVFoundation on local files; successful jobs atomically persist the managed relative filename. Identical content shares one file. Deletion unlinks a shared file only after its last reference is removed. Storage-read failure blocks writes instead of replacing corrupt data with defaults.
+
+App Group inbox uses one atomically written JSON file per normalized URL hash. The extension performs no extraction or network transfer. The app marks receipt IDs persisted before removing inbox files. Pending additional URLs are consumed on subsequent activation once the input is empty. Re-sharing after consumption is allowed because each receipt includes creation time. Deep links fill the input; they never authorize an automatic download.
+
+Small preferences use @AppStorage; model snapshot is schema-versioned Codable; resolver bearer uses Keychain after-first-unlock, this-device-only. Library and resume data use file protection until first authentication and are excluded from backup. No arbitrary file path is decoded from a remote manifest. URLs may include necessary signed query strings and are private local metadata, not diagnostic output.
+
+Tests: CoreTests covers domain, validation and storage; FlowTests uses an explicit Debug-only URLProtocol fixture flag and a fresh local library. That code is compiled out of Release. The production engine never emits simulated progress. Backend tests use deterministic DNS fixtures and an actual localhost HTTP server. Real device behavior remains a separate acceptance gate.

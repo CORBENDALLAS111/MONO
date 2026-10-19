@@ -1,0 +1,13 @@
+.DS_Store
+.build/
+DerivedData/
+build/
+*.xcodeproj/
+*.xcworkspace/
+*.ipa
+*.p12
+*.mobileprovision
+__pycache__/
+.env
+xcuserdata/
+signing-project.json

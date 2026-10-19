@@ -1,0 +1,13 @@
+// Configure these together with your Apple developer identifiers and profiles.
+APP_NAME = MONO
+APP_BUNDLE_ID = com.example.mono
+EXTENSION_BUNDLE_ID = com.example.mono.share
+APP_GROUP = group.com.example.mono
+DEVELOPMENT_TEAM =
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated
+TARGETED_DEVICE_FAMILY = 1

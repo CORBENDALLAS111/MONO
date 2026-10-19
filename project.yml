@@ -1,0 +1,106 @@
+name: MONO
+options:
+  minimumXcodeGenVersion: 2.44.1
+  developmentLanguage: ru
+  knownRegions: [ru, en, Base]
+  deploymentTarget:
+    iOS: '26.0'
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Config/App.xcconfig
+  Release: Config/App.xcconfig
+settings:
+  base:
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  MONO:
+    type: application
+    platform: iOS
+    sources: [MONOApp, Shared]
+    info:
+      path: Config/App-Info.plist
+      properties:
+        CFBundleDisplayName: $(APP_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSPhotoLibraryAddUsageDescription: 'Сохранение выбранных вами файлов в Фото. / Save selected files to Photos.'
+        MonoAppGroup: $(APP_GROUP)
+        CFBundleURLTypes:
+          - CFBundleURLName: $(APP_BUNDLE_ID)
+            CFBundleURLSchemes: [mono]
+    entitlements:
+      path: Config/App.entitlements
+      properties:
+        com.apple.security.application-groups: [$(APP_GROUP)]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - target: MONOShareExtension
+        embed: true
+  MONOShareExtension:
+    type: app-extension
+    platform: iOS
+    sources: [MONOShareExtension, Shared]
+    info:
+      path: Config/Share-Info.plist
+      properties:
+        CFBundleDisplayName: $(APP_NAME)
+        MonoAppGroup: $(APP_GROUP)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 10
+              NSExtensionActivationSupportsText: true
+    entitlements:
+      path: Config/Share.entitlements
+      properties:
+        com.apple.security.application-groups: [$(APP_GROUP)]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(EXTENSION_BUNDLE_ID)
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+  MONOTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [MONOTests]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).tests
+    dependencies:
+      - target: MONO
+  MONOUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [MONOUITests]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).uitests
+    dependencies:
+      - target: MONO
+schemes:
+  MONO:
+    build:
+      targets:
+        MONO: all
+        MONOShareExtension: all
+    test:
+      targets: [MONOTests, MONOUITests]
+      gatherCoverageData: true
+    archive:
+      config: Release

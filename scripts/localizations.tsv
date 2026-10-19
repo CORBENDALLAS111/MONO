@@ -1,0 +1,132 @@
+all	Все	All
+ok	Хорошо	OK
+save	Сохранить	Save
+cancel	Отмена	Cancel
+close	Закрыть	Close
+clear	Очистить	Clear
+paste	Вставить	Paste
+continue	Продолжить	Continue
+analyzing	Анализируем ссылку	Analyzing link
+download	Скачать	Download
+pause	Пауза	Pause
+retry	Продолжить / повторить	Resume / retry
+delete	Удалить	Delete
+reset	Сбросить	Reset
+search	Поиск	Search
+filename	Название файла	Filename
+folder	Коллекция	Collection
+source	Источник	Source
+preset	Пресет	Preset
+presets	Пресеты	Presets
+quality	Качество	Quality
+original	Исходный файл	Original file
+video	Видео	Video
+image	Фото	Image
+share	Поделиться	Share
+more	Действия	Actions
+rename	Переименовать	Rename
+favorite	В избранное	Favorite
+unfavorite	Убрать из избранного	Unfavorite
+favorites	Только избранное	Favorites only
+grid	Сетка	Grid
+newest	Сначала новые	Newest first
+type	Тип файла	File type
+filters	Фильтры и вид	Filters and view
+preview	Открыть просмотр	Open preview
+save.files	Сохранить в Файлы	Save to Files
+save.photos	Сохранить в Фото	Save to Photos
+wifi.only	Только Wi-Fi	Wi-Fi only
+low.data	Учитывать экономию данных	Respect Low Data Mode
+notifications	Уведомлять о завершении	Notify on completion
+concurrency	Одновременные загрузки	Concurrent downloads
+haptics	Тактильный отклик	Haptics
+theme	Оформление	Appearance
+theme.system	Как в системе	System
+tab.home	Главная	Home
+tab.downloads	Загрузки	Downloads
+tab.library	Коллекция	Library
+tab.settings	Настройки	Settings
+home.original	БЕЗ ПЕРЕКОДИРОВАНИЯ	ORIGINAL BYTES
+home.hero	Сохраняйте\nлучшее.	Keep what\nmoves you.
+home.subtitle	Ваши видео и фотографии.\nВ исходном качестве. В одном месте.	Your videos and photographs.\nOriginal quality. One quiet place.
+home.link	ССЫЛКА НА МЕДИА	MEDIA LINK
+home.privacy	Буфер обмена читается только по вашему нажатию. Поддерживаются прямые HTTPS-ссылки; социальные сети требуют вашего сервера.	Your clipboard is read only when you tap Paste. Direct HTTPS links work independently; social links require your server.
+home.recent	Недавно сохранено	Recently saved
+home.bytes	Настоящие файлы. Настоящее качество. Только ваше.	Real files. Original quality. Yours to keep.
+inspector.title	Перед сохранением	Before you save
+inspector.metadata	Показываем только известные параметры. Разрешение, кодек и длительность могут быть недоступны; файл сохраняется без изменений.	Only known metadata is shown. Resolution, codec and duration may be unavailable; the file is preserved unchanged.
+inspector.assets	Медиа и качество	Media and quality
+inspector.destination	Назначение	Destination
+destination.local	Сначала — защищённая локальная библиотека. Затем можно экспортировать в Фото или Файлы. Коллекция хранится как метаданные.	Saved to the protected local library first. Export to Photos or Files afterwards. Collections are metadata folders.
+destination.photos	Этот пресет также сохраняет в Фото. Доступ запрашивается при сохранении.	This preset also saves to Photos. Permission is requested when saving.
+select.all	Выбрать всё	Select all
+select.none	Снять выбор	Deselect all
+audio.yes	Со звуком	Includes audio
+audio.no	Без звука	No audio
+large.confirm	Скачать более 250 МБ?	Download more than 250 MB?
+rights	Сохраняйте только собственные материалы или контент, на который у вас есть разрешение. Доступность зависит от источника; обход ограничений не поддерживается.	Save only your own media or content you are authorized to download. Availability depends on the source; access restrictions are not bypassed.
+downloads.subtitle	Всё под контролем. Даже между открытиями приложения.	A place for every transfer. Even between visits.
+downloads.empty	Пока тихо.	Nothing in motion.
+downloads.empty.detail	Добавьте ссылку на главной — здесь появятся состояние и реальный прогресс загрузки.	Add a link on Home to see its transfer status and real progress here.
+background.limit	iOS управляет фоновыми загрузками. После принудительного закрытия приложения работа не гарантируется. При неподдерживаемой паузе загрузка начинается заново.	iOS controls background transfers. Force-quitting may stop them. If a server cannot resume a paused transfer, it restarts.
+interrupted	Загрузка прервана системой. Нажмите повторить.	Transfer was interrupted. Tap retry.
+state.waiting	В очереди	Queued
+state.running	Загружается	Downloading
+state.paused	Приостановлено	Paused
+state.processing	Проверяем файл	Verifying file
+state.completed	Сохранено	Saved
+state.failed	Не удалось загрузить	Transfer failed
+state.canceled	Отменено	Canceled
+pause.preparing	Сохраняем точку возобновления…	Saving resume information…
+pause.restart	Сервер не предоставил возобновление. Продолжение начнёт загрузку заново.	Resume information is unavailable. Continuing will restart the transfer.
+pause.resume	Возобновление доступно; сервер может потребовать перезапуск.	Resume information saved; the server may still require a restart.
+download.complete	Файл сохранён в коллекции.	Your file is saved in the library.
+library.empty	Место для вашего.	Room for your favorites.
+library.empty.detail	Сохранённые файлы появятся здесь. Они останутся на устройстве и доступны для экспорта.	Saved files appear here. They stay on your device and can be exported.
+delete.confirm	Удалить файл из коллекции?	Delete this file from the library?
+settings.appearance	Оформление	Appearance
+settings.accessibility	Размер текста, уменьшение движения и прозрачности учитываются из системных настроек. Все элементы интерфейса — монохромные.	System text size, Reduce Motion and Reduce Transparency are respected. All app chrome is monochrome.
+settings.downloads	Загрузка и сеть	Downloads and network
+settings.next	Сетевые изменения применяются к новым задачам. Для изменения уже созданной задачи отмените её и создайте снова.	Network changes apply to new tasks. Cancel and recreate an existing task to change its network policy.
+settings.advanced	Дополнительно · сервер	Advanced · resolver
+resolver.explanation	Социальные ссылки не являются прямыми файлами. Укажите свой HTTPS-сервер с контрактом MONO v1 и доступом к разрешённым материалам. TikTok Display API не предоставляет универсальную загрузку оригиналов.	Social links are not direct files. Configure your HTTPS server implementing MONO v1 and authorized media access. TikTok Display API is not a universal original-download API.
+resolver.endpoint	https://ваш-сервер	HTTPS server URL
+resolver.token	Токен доступа	Access token
+resolver.save	Сохранить подключение	Save connection
+diagnostics.export	Экспорт диагностики без ссылок и секретов	Export diagnostics without links or secrets
+privacy	Конфиденциальность	Privacy
+privacy.detail	Нет аналитики и трекеров. Ссылки и имена хранятся на устройстве; выбранный вами сервер получает только отправленную ему ссылку. Токен хранится в Keychain. Миниатюры не имеют постоянного кэша.	No analytics or trackers. Links and titles stay on your device; your configured server receives links you submit to it. Tokens stay in Keychain. Thumbnails have no persistent cache.
+history.clear	Очистить отменённые и неудачные задачи	Clear canceled and failed jobs
+files.delete.all	Удалить все локальные файлы	Delete all local files
+files.delete.confirm	Удалить все файлы библиотеки? Это нельзя отменить.	Delete every library file? This cannot be undone.
+settings.reset	Сбросить настройки и пресеты	Reset settings and presets
+settings.reset.confirm	Сбросить оформление, сеть и пресеты? Файлы и подключение сервера сохранятся.	Reset appearance, network settings and presets? Files and server credentials will be retained.
+preset.best	Максимальное качество	Best available
+preset.small	Экономия места	Smaller files
+preset.photos	Только фото	Photos only
+preset.custom	Мой пресет	My preset
+preset.add	Новый пресет	New preset
+preset.name	Название пресета	Preset name
+preset.smaller	Меньший из доступных вариантов	Prefer smaller available variant
+preset.photosOnly	Выбирать только фотографии	Select photos only
+preset.honest	Пресет выбирает только реальные варианты источника. Не повышает разрешение и не перекодирует файл.	Presets choose only variants actually provided by the source. They never upscale or re-encode files.
+share.reading	Читаем ссылку…	Reading link…
+share.pending	Ссылка сохранена. Откройте приложение, чтобы проверить медиа и начать загрузку.	Link saved. Open the app to inspect the media and begin downloading.
+share.failure	Не удалось принять ссылку. Проверьте формат HTTPS и настройку App Group в подписи приложения.	Could not receive this link. Check its HTTPS format and the App Group in the app signing configuration.
+error.title	Не получилось	Something needs attention
+error.url	Нужна корректная HTTPS-ссылка без логина, пароля и нестандартного порта.	Enter a valid HTTPS link without embedded credentials or a nonstandard port.
+error.host	Локальные, частные и служебные сетевые адреса недоступны.	Local, private and reserved network addresses are blocked.
+error.unsupported	Это не поддерживаемый прямой видео- или фотофайл. Потоки HLS/DASH и веб-страницы не скачиваются этим способом.	This is not a supported direct video or image file. HLS/DASH streams and web pages are not supported by this path.
+error.backend	Для этой социальной ссылки нужен настроенный авторизованный сервер в разделе «Настройки → Дополнительно». Источник может быть недоступен даже с сервером.	This social link requires your authorized server in Settings → Advanced. The source may remain unavailable even with a server.
+error.manifest	Сервер вернул некорректное описание медиа.	The server returned an invalid media manifest.
+error.http	Источник отказал в доступе или недоступен. Код HTTP	The source denied access or is unavailable. HTTP status
+error.file	Файл отсутствует или его формат не соответствует заявленному.	The file is missing or its format does not match its declared media type.
+error.limit	Превышен допустимый размер. Файл — до 2 ГБ; описание — до 512 КБ.	Size limit exceeded. Files are limited to 2 GB; manifests to 512 KB.
+error.transfer	Передача прервана. Проверьте сеть и повторите загрузку.	Transfer interrupted. Check your connection and retry.
+error.network	Не удалось связаться с источником. Проверьте сеть, срок действия ссылки и доступность сервера.	Could not reach the source. Check your connection, link expiry and server availability.
+error.storage	Не удалось прочитать или сохранить библиотеку. Проверьте свободное место. Существующие данные не перезаписываются при ошибке чтения.	Could not read or save the library. Check available storage. Existing data is not overwritten after a read failure.
+error.inbox	Не удалось прочитать общую папку расширения. Проверьте App Group и подписи обоих компонентов.	Could not read the shared extension inbox. Check the App Group and both provisioning profiles.
+error.photos	Файл сохранён локально, но не добавлен в Фото. Проверьте разрешение и поддерживаемый формат.	The local file is safe, but could not be added to Photos. Check permission and format support.
+error.export	Не удалось экспортировать файл.	Could not export this file.
+error.permission	Не удалось получить разрешение. Проверьте системные настройки.	Permission could not be granted. Check system settings.
+error.settings	Не удалось сохранить подключение. Проверьте HTTPS-адрес и доступность Keychain.	Could not save the connection. Check its HTTPS URL and Keychain availability.

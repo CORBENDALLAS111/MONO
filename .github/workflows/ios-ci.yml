@@ -1,0 +1,55 @@
+name: iOS CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m unittest discover -s Backend/tests -v
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Discover stable Xcode 26
+        run: bash scripts/select-xcode.sh
+      - name: Install pinned XcodeGen from source
+        run: |
+          git clone --depth 1 --branch 2.44.1 https://github.com/yonaskolb/XcodeGen.git "$RUNNER_TEMP/XcodeGen"
+          cd "$RUNNER_TEMP/XcodeGen"
+          swift build -c release --product xcodegen
+          echo "$RUNNER_TEMP/XcodeGen/.build/release" >> "$GITHUB_PATH"
+      - name: Build both targets, archive and test
+        run: bash scripts/ci.sh
+      - name: Upload real unsigned device output
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MONO-UNSIGNED-device
+          path: |
+            build/MONO-UNSIGNED.xcarchive.tar.gz
+            build/MONO-UNSIGNED-REQUIRES-SIGNING.ipa
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload logs and test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MONO-build-logs
+          path: |
+            build/*.log
+            build/*.txt
+            build/*.xcresult
+          if-no-files-found: warn
+          retention-days: 14

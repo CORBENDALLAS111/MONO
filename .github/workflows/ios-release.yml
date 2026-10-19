@@ -1,0 +1,60 @@
+name: Signed iOS release
+on:
+  workflow_dispatch:
+    inputs:
+      method:
+        type: choice
+        description: Export method matching BOTH supplied profiles
+        default: ad-hoc
+        options: [ad-hoc, development, app-store-connect]
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      APPLE_P12_BASE64: ${{ secrets.APPLE_P12_BASE64 }}
+      APPLE_P12_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APP_PROFILE_BASE64: ${{ secrets.APP_PROFILE_BASE64 }}
+      EXTENSION_PROFILE_BASE64: ${{ secrets.EXTENSION_PROFILE_BASE64 }}
+      APP_BUNDLE_ID: ${{ vars.APP_BUNDLE_ID || 'com.example.mono' }}
+      EXTENSION_BUNDLE_ID: ${{ vars.EXTENSION_BUNDLE_ID || 'com.example.mono.share' }}
+      APP_GROUP: ${{ vars.APP_GROUP || 'group.com.example.mono' }}
+      EXPORT_METHOD: ${{ inputs.method }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required signing secrets
+        run: |
+          for name in APPLE_P12_BASE64 APPLE_P12_PASSWORD APPLE_TEAM_ID APP_PROFILE_BASE64 EXTENSION_PROFILE_BASE64; do
+            if [ -z "${!name}" ]; then echo "::error::Missing secret $name"; exit 1; fi
+          done
+      - run: bash scripts/select-xcode.sh
+      - name: Install pinned XcodeGen
+        run: |
+          git clone --depth 1 --branch 2.44.1 https://github.com/yonaskolb/XcodeGen.git "$RUNNER_TEMP/XcodeGen"
+          cd "$RUNNER_TEMP/XcodeGen"
+          swift build -c release --product xcodegen
+          echo "$RUNNER_TEMP/XcodeGen/.build/release" >> "$GITHUB_PATH"
+      - name: Import signing material and validate profiles
+        run: bash scripts/signing-setup.sh
+      - name: Archive and export signed IPA
+        run: bash scripts/release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MONO-SIGNED-${{ inputs.method }}
+          path: build/signed/*.ipa
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload redacted build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MONO-release-logs
+          path: build/*.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Remove temporary signing material
+        if: always()
+        run: bash scripts/signing-cleanup.sh
