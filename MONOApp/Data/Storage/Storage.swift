@@ -6,6 +6,7 @@ struct LibrarySnapshot: Codable {
     var jobs: [DownloadJob] = []
     var presets: [DownloadPreset] = DownloadPreset.defaults
     var consumedInbox: Set<String> = []
+    var pendingInput: String?
 }
 
 struct DiskStore: Sendable {

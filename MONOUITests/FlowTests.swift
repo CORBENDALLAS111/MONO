@@ -2,6 +2,19 @@ import XCTest
 
 @MainActor
 final class FlowTests: XCTestCase {
+    func testHomeInBothThemes() {
+        for theme in ["obsidian", "porcelain"] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--mono-ui-fixtures", "-appearance", theme, "-AppleLanguages", "(ru)", "-AppleLocale", "ru_RU"]
+            app.launch()
+            XCTAssertTrue(app.buttons["analyzeButton"].waitForExistence(timeout: 5))
+            let screenshot = XCTAttachment(screenshot: app.screenshot())
+            screenshot.name = "MONO-home-" + theme
+            screenshot.lifetime = .keepAlways
+            add(screenshot)
+            app.terminate()
+        }
+    }
     func testAnalyzeSelectDownloadLibrary() {
         let app = XCUIApplication()
         app.launchArguments = ["--mono-ui-fixtures", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
@@ -9,12 +22,15 @@ final class FlowTests: XCTestCase {
         let input = app.textFields["urlInput"].exists ? app.textFields["urlInput"] : app.textViews["urlInput"]
         XCTAssertTrue(input.waitForExistence(timeout: 5))
         input.tap()
-        input.typeText("https://fixtures.mono.invalid/media.png")
+        input.typeText("https://fixtures.mono.example/media.png")
         app.buttons["analyzeButton"].tap()
+        XCTAssertTrue(app.navigationBars["Before you save"].waitForExistence(timeout: 10), app.debugDescription)
         let download = app.buttons["downloadButton"]
-        XCTAssertTrue(download.waitForExistence(timeout: 10))
-        download.swipeUp()
-        if !download.isHittable { app.swipeUp() }
+        for _ in 0..<6 {
+            if download.exists && download.isHittable { break }
+            app.swipeUp()
+        }
+        guard download.exists && download.isHittable else { XCTFail(app.debugDescription); return }
         download.tap()
         XCTAssertTrue(app.staticTexts["Saved"].firstMatch.waitForExistence(timeout: 15))
         app.tabBars.buttons["Library"].tap()
@@ -29,5 +45,6 @@ final class FlowTests: XCTestCase {
         input.tap(); input.typeText("https://vm.tiktok.com/abcdef/")
         app.buttons["analyzeButton"].tap()
         XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.alerts.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "authorized server")).firstMatch.exists)
     }
 }

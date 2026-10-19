@@ -17,6 +17,7 @@ final class AppModel {
     @ObservationIgnored private var samples: [UUID: (Date, Int64)] = [:]
     @ObservationIgnored private var scheduling = false
     @ObservationIgnored private var completionsInFlight = 0
+    @ObservationIgnored private var processingIDs: Set<UUID> = []
     @ObservationIgnored private var backgroundFinished = false
     @ObservationIgnored var backgroundCompletion: (() -> Void)?
     var jobs: [DownloadJob] { snapshot.jobs }
@@ -34,6 +35,7 @@ final class AppModel {
             #endif
             self.disk = disk
             snapshot = try disk.load()
+            input = snapshot.pendingInput ?? ""
             storageReady = true
             let (events, continuation) = AsyncStream<TransferEvent>.makeStream()
             transport = DownloadTransport(staging: disk.root) { event in
@@ -48,6 +50,7 @@ final class AppModel {
     }
     func persist() -> Bool {
         guard storageReady, let disk else { return false }
+        snapshot.pendingInput = input.isEmpty ? nil : input
         do { try disk.save(snapshot); return true }
         catch { self.error = String(localized: "error.storage"); return false }
     }
@@ -57,8 +60,13 @@ final class AppModel {
         defer { resolving = false }
         do {
             let url = try URLPolicy.extract(input)
-            let token = try KeychainToken.read()
-            manifest = try await ResolverRegistry(endpoint: UserDefaults.standard.string(forKey: "resolverEndpoint") ?? "", token: token).resolve(url)
+            let endpoint = UserDefaults.standard.string(forKey: "resolverEndpoint") ?? ""
+            let token: String
+            if URLPolicy.isSocial(url) {
+                guard !endpoint.isEmpty else { throw InputError.backendMissing }
+                token = try KeychainToken.read()
+            } else { token = "" }
+            manifest = try await ResolverRegistry(endpoint: endpoint, token: token).resolve(url)
         } catch is CancellationError { return }
         catch { self.error = error is InputError ? error.localizedDescription : String(localized: "error.network") }
     }
@@ -96,6 +104,7 @@ final class AppModel {
         }
     }
     func recover() async {
+        guard !scheduling else { return }
         guard let transport, let disk else { return }
         let tasks = await transport.tasks()
         let ids = Set(tasks.compactMap { $0.taskDescription.flatMap(UUID.init(uuidString:)) })
@@ -130,6 +139,7 @@ final class AppModel {
         guard persist() else { return }
         self.manifest = nil
         input = ""
+        _ = persist()
         selectedTab = 1
         await schedule()
     }
@@ -205,6 +215,7 @@ final class AppModel {
             guard let i = index(id), jobs[i].state == .paused else { return }
             do {
                 if let data { try data.write(to: disk.resumeFile(id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
+                else if FileManager.default.fileExists(atPath: disk.resumeFile(id).path) { try FileManager.default.removeItem(at: disk.resumeFile(id)) }
                 snapshot.jobs[i].message = String(localized: data == nil ? "pause.restart" : "pause.resume")
             } catch { self.error = String(localized: "error.storage"); snapshot.jobs[i].message = String(localized: "pause.restart") }
             _ = persist()
@@ -212,17 +223,24 @@ final class AppModel {
             guard let i = index(id), jobs[i].state == .running else { return }
             snapshot.jobs[i].state = .failed
             snapshot.jobs[i].message = message
+            // A rejected/expired resume blob must not create an endless retry loop.
+            if FileManager.default.fileExists(atPath: disk.resumeFile(id).path) {
+                do { try FileManager.default.removeItem(at: disk.resumeFile(id)) }
+                catch { self.error = String(localized: "error.storage") }
+            }
             _ = persist()
             await schedule()
         case .staged(let id, let staged):
+            guard !processingIDs.contains(id) else { return }
             guard let i = index(id), jobs[i].state == .running || jobs[i].state == .processing else {
                 try? FileManager.default.removeItem(at: staged)
                 return
             }
             snapshot.jobs[i].state = .processing
+            processingIDs.insert(id)
             _ = persist()
             completionsInFlight += 1
-            defer { completionsInFlight -= 1; finishBackgroundIfReady() }
+            defer { processingIDs.remove(id); completionsInFlight -= 1; finishBackgroundIfReady() }
             do {
                 let mime = jobs[i].variant.mimeType
                 let kind = jobs[i].kind

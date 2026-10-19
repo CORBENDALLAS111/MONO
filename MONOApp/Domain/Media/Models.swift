@@ -17,6 +17,7 @@ struct MediaVariant: Codable, Identifiable, Hashable, Sendable {
         return String(localized: "original")
     }
     static func best(_ variants: [Self], smaller: Bool = false) -> Self? {
+        if smaller, let smallestKnown = variants.filter({ ($0.bytes ?? 0) > 0 }).min(by: { ($0.bytes ?? 0) < ($1.bytes ?? 0) }) { return smallestKnown }
         let ranked = variants.sorted {
             let a = Int64($0.width ?? 0) * Int64($0.height ?? 0)
             let b = Int64($1.width ?? 0) * Int64($1.height ?? 0)

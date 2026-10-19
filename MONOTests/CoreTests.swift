@@ -36,6 +36,23 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(MediaVariant.best([low,high], smaller: true)?.id, low.id)
         XCTAssertNil(MediaVariant.best([]))
     }
+    func testSmallerPreferenceUsesKnownFileSize() throws {
+        let url = try XCTUnwrap(URL(string: "https://example.com/a.mp4"))
+        let efficient = MediaVariant(id: "efficient", url: url, mimeType: "video/mp4", width: 1920, height: 1080, bytes: 100)
+        let heavy = MediaVariant(id: "heavy", url: url, mimeType: "video/mp4", width: 1280, height: 720, bytes: 200)
+        XCTAssertEqual(MediaVariant.best([heavy,efficient], smaller: true)?.id, efficient.id)
+    }
+    func testLocalAddressFailsBeforeTransfer() async throws {
+        let url = try XCTUnwrap(URL(string: "https://127.0.0.1/a.jpg"))
+        do { try await URLPolicy.validate(url); XCTFail("Private addresses must be rejected") }
+        catch { XCTAssertEqual(error as? InputError, .unsafeHost) }
+    }
+    func testStoragePathConflictIsReported() throws {
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data("regular file".utf8).write(to: path)
+        XCTAssertThrowsError(try DiskStore(root: path))
+    }
     func testStateMachine() {
         XCTAssertTrue(JobState.running.allows(.paused))
         XCTAssertTrue(JobState.paused.allows(.waiting))

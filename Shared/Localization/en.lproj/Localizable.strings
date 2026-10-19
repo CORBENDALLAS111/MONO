@@ -130,3 +130,4 @@
 "error.export" = "Could not export this file.";
 "error.permission" = "Permission could not be granted. Check system settings.";
 "error.settings" = "Could not save the connection. Check its HTTPS URL and Keychain availability.";
+"licenses" = "Open source licenses";

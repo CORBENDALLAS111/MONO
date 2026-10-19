@@ -28,8 +28,10 @@ simulator="$(cat build/simulator-id)"
 if [ -n "$simulator" ]; then
   xcodebuild -project MONO.xcodeproj -scheme MONO -configuration Debug \
     -destination "platform=iOS Simulator,id=$simulator" -parallel-testing-enabled NO \
+    -test-timeouts-enabled YES -default-test-execution-time-allowance 90 -maximum-test-execution-time-allowance 180 \
     -resultBundlePath build/MONO-tests.xcresult CODE_SIGNING_ALLOWED=NO test | tee build/tests.log
   echo 'Simulator unit/UI tests: executed; see xcresult for counts.' >> "$GITHUB_STEP_SUMMARY"
+  xcrun xcresulttool export attachments --path build/MONO-tests.xcresult --output-path build/screenshots > build/screenshot-export.log 2>&1 || echo '::warning::Could not export optional UI screenshots; inspect xcresult attachments.'
 else
   xcodebuild -project MONO.xcodeproj -scheme MONO -configuration Debug \
     -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build-for-testing | tee build/simulator-build.log

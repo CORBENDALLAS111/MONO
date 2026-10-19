@@ -66,6 +66,9 @@ def main():
     (ROOT / 'MONOApp/DesignSystem/Lucide.generated.swift').write_text('\n'.join(output), encoding='utf-8')
     license_file = source_dir / 'LICENSE'
     if not license_file.exists(): license_file.write_bytes(urllib.request.urlopen(f'https://raw.githubusercontent.com/lucide-icons/lucide/{REV}/LICENSE').read())
+    resources = ROOT / 'MONOApp/Resources'
+    resources.mkdir(parents=True, exist_ok=True)
+    (resources / 'Lucide-LICENSE.txt').write_bytes(license_file.read_bytes())
     (source_dir / 'source.json').write_text(json.dumps({'repository':'https://github.com/lucide-icons/lucide', 'commit':REV, 'icons':NAMES}, indent=2)+'\n')
     print(f'Generated {len(NAMES)} native vector icons')
 

@@ -1,9 +1,12 @@
 import Foundation
 import Photos
 import AVFoundation
+import UIKit
 
 enum PhotosExporter {
-    static func save(_ url: URL, kind: MediaKind) async throws {
+    @MainActor static func save(_ url: URL, kind: MediaKind) async throws {
+        if PHPhotoLibrary.authorizationStatus(for: .addOnly) == .notDetermined,
+           UIApplication.shared.applicationState != .active { throw CocoaError(.fileWriteNoPermission) }
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else { throw CocoaError(.fileWriteNoPermission) }
         try await PHPhotoLibrary.shared().performChanges {

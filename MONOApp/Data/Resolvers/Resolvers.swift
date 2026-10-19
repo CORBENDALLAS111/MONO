@@ -117,7 +117,9 @@ struct ResolverRegistry: Sendable {
     func resolve(_ url: URL) async throws -> MediaManifest {
         if URLPolicy.isSocial(url) {
             guard !endpoint.isEmpty, !token.isEmpty else { throw InputError.backendMissing }
-            return try await AuthorizedServiceResolver(endpoint: URLPolicy.normalize(endpoint), token: token).resolve(url)
+            let server = try URLPolicy.normalize(endpoint)
+            guard server.query == nil else { throw InputError.invalidURL }
+            return try await AuthorizedServiceResolver(endpoint: server, token: token).resolve(url)
         }
         return try await GenericDirectMediaResolver().resolve(url)
     }

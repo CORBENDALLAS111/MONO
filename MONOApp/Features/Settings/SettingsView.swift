@@ -8,16 +8,26 @@ struct SettingsView: View {
     @AppStorage("wifiOnly") private var wifiOnly = false
     @AppStorage("lowData") private var lowData = false
     @AppStorage("concurrency") private var concurrency = 2
-    @AppStorage("resolverEndpoint") private var endpoint = ""
+    @AppStorage("resolverEndpoint") private var storedEndpoint = ""
     @AppStorage("notifications") private var notifications = false
     @State private var token = ""
+    @State private var endpoint = ""
     @State private var query = ""
     @State private var editingPreset: DownloadPreset?
     @State private var reset = false
     @State private var wipe = false
     @State private var advanced = false
     private func matches(_ key: String) -> Bool {
-        query.isEmpty || String(localized: String.LocalizationValue(key)).localizedCaseInsensitiveContains(query)
+        let terms: [String: [String]] = [
+            "settings.appearance": ["theme", "haptics", "settings.accessibility"],
+            "settings.downloads": ["wifi.only", "low.data", "concurrency", "notifications"],
+            "settings.advanced": ["resolver.endpoint", "resolver.token", "diagnostics.export"],
+            "privacy": ["history.clear", "files.delete.all", "settings.reset"],
+            "presets": ["preset.best", "preset.small", "preset.photos"]
+        ]
+        return query.isEmpty || ([key] + (terms[key] ?? [])).contains {
+            String(localized: String.LocalizationValue($0)).localizedCaseInsensitiveContains(query)
+        }
     }
     var body: some View {
         Form {
@@ -60,7 +70,9 @@ struct SettingsView: View {
                         Button("resolver.save") {
                             do {
                                 if !endpoint.isEmpty { endpoint = try URLPolicy.normalize(endpoint).absoluteString }
+                                if let url = URL(string: endpoint), url.query != nil { throw InputError.invalidURL }
                                 try KeychainToken.write(token)
+                                storedEndpoint = endpoint
                             } catch { model.error = String(localized: "error.settings") }
                         }
                         Text("direct/1.0 · resolver contract v1 · Swift 6 · iOS 26+").font(.caption).foregroundStyle(.secondary)
@@ -79,10 +91,14 @@ struct SettingsView: View {
                     Button("settings.reset") { reset = true }
                 }
             }
-            Section { Text("rights").font(.footnote).foregroundStyle(.secondary) }
+            Section {
+                Text("rights").font(.footnote).foregroundStyle(.secondary)
+                NavigationLink("licenses") { LicenseView() }
+            }
         }.navigationTitle("tab.settings").searchable(text: $query, prompt: "search")
         .sheet(item: $editingPreset) { preset in PresetEditor(preset: preset) }
         .onAppear {
+            endpoint = storedEndpoint
             do { token = try KeychainToken.read() }
             catch { model.error = String(localized: "error.settings") }
         }
@@ -99,6 +115,20 @@ struct SettingsView: View {
     private var diagnostics: String {
         // Deliberately omit URLs, titles, filenames, bearer tokens and server endpoint.
         "MONO diagnostics v1\nOS: \(ProcessInfo.processInfo.operatingSystemVersionString)\nJobs: \(model.jobs.count)\nCompleted: \(model.library.count)\nResolver: direct/1.0; contract v1\n"
+    }
+}
+
+private struct LicenseView: View {
+    @State private var text = ""
+    var body: some View {
+        ScrollView { Text(text).font(.footnote.monospaced()).textSelection(.enabled).padding(24) }
+            .navigationTitle("licenses")
+            .task {
+                do {
+                    guard let url = Bundle.main.url(forResource: "Lucide-LICENSE", withExtension: "txt") else { throw CocoaError(.fileNoSuchFile) }
+                    text = try String(contentsOf: url, encoding: .utf8)
+                } catch { text = String(localized: "error.file") }
+            }
     }
 }
 

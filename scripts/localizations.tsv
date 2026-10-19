@@ -130,3 +130,4 @@ error.photos	Файл сохранён локально, но не добавл�
 error.export	Не удалось экспортировать файл.	Could not export this file.
 error.permission	Не удалось получить разрешение. Проверьте системные настройки.	Permission could not be granted. Check system settings.
 error.settings	Не удалось сохранить подключение. Проверьте HTTPS-адрес и доступность Keychain.	Could not save the connection. Check its HTTPS URL and Keychain availability.
+licenses	Лицензии открытого ПО	Open source licenses
