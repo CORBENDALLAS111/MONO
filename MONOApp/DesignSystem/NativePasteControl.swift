@@ -3,8 +3,8 @@ import UIKit
 import UniformTypeIdentifiers
 
 /// SwiftUI PasteButton retains an internal rectangular fill. UIKit's documented
-/// configuration lets the genuine privacy-preserving paste control stay transparent
-/// inside our native Liquid Glass capsule, without reading/polling UIPasteboard.
+/// configuration removes that rectangle using a capsule matching the system surface,
+/// inside native Liquid Glass, without reading/polling UIPasteboard.
 struct NativePasteControl: UIViewRepresentable {
     let receive: @MainActor (String?) -> Void
     func makeUIView(context: Context) -> PasteTargetView { PasteTargetView(receive: receive) }
@@ -27,7 +27,9 @@ final class PasteTargetView: UIView {
         let configuration = UIPasteControl.Configuration()
         configuration.displayMode = .labelOnly
         configuration.cornerStyle = .capsule
-        configuration.baseBackgroundColor = .clear
+        // UIPasteControl renders the RGB of a clear base as black in light mode.
+        // A dynamic opaque system color preserves contrast in both appearances.
+        configuration.baseBackgroundColor = .systemBackground
         configuration.baseForegroundColor = .label
         control = UIPasteControl(configuration: configuration)
         super.init(frame: .zero)
