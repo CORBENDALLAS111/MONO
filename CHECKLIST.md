@@ -7,7 +7,7 @@
 - [x] Real Share Extension target, activation rules and App Group inbox implemented.
 - [x] Codable presets and settings wired into selection/network/Photos behavior.
 - [x] Unit/UI test source, unsigned and signed workflows, build/install documentation.
-- [ ] Successful actual Xcode build and simulator test evidence (see VERIFICATION.md).
+- [x] Successful actual Xcode build and simulator test evidence (source revisions and latest result in VERIFICATION.md).
 - [ ] Device Share Sheet/background/permissions and complete visual/accessibility QA.
 - [ ] Connection-level DNS rebinding protection reviewed and resolved before public distribution.
 - [ ] Valid Apple signing credentials supplied and installable IPA exported.
