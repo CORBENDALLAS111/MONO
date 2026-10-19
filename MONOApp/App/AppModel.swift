@@ -13,6 +13,7 @@ final class AppModel {
     var storageReady = false
     private var disk: DiskStore?
     @ObservationIgnored private var transport: DownloadTransport?
+    @ObservationIgnored private var eventTask: Task<Void, Never>?
     @ObservationIgnored private var samples: [UUID: (Date, Int64)] = [:]
     @ObservationIgnored private var scheduling = false
     @ObservationIgnored private var completionsInFlight = 0
@@ -34,8 +35,12 @@ final class AppModel {
             self.disk = disk
             snapshot = try disk.load()
             storageReady = true
-            transport = DownloadTransport(staging: disk.root) { [weak self] event in
-                Task { @MainActor in await self?.handle(event) }
+            let (events, continuation) = AsyncStream<TransferEvent>.makeStream()
+            transport = DownloadTransport(staging: disk.root) { event in
+                continuation.yield(event)
+            }
+            eventTask = Task { [weak self] in
+                for await event in events { await self?.handle(event) }
             }
         } catch {
             self.error = String(localized: "error.storage")
@@ -44,7 +49,7 @@ final class AppModel {
     func persist() -> Bool {
         guard storageReady, let disk else { return false }
         do { try disk.save(snapshot); return true }
-        catch { error = String(localized: "error.storage"); return false }
+        catch { self.error = String(localized: "error.storage"); return false }
     }
     func resolve() async {
         guard !resolving else { return }
@@ -87,7 +92,7 @@ final class AppModel {
             }
         } catch {
             // A missing App Group must not silently pretend sharing worked.
-            error = String(localized: "error.inbox")
+            self.error = String(localized: "error.inbox")
         }
     }
     func recover() async {

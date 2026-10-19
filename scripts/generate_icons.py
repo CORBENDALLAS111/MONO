@@ -1,5 +1,5 @@
 """Official Lucide SVG -> native SwiftUI Path, pinned source and no runtime dependencies.
-Run: python -m pip install svgpathtools==1.7.2; python scripts/generate_icons.py
+Run: python -m pip install svgpathtools==1.8.0; python scripts/generate_icons.py
 """
 import json
 import math
